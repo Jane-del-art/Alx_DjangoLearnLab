@@ -9,4 +9,4 @@ def list_books(request):
 class LibraryDetailView(DetailView):
     model = Library  # ← This needs Library imported
     template_name = 'relationship_app/library_detail.html'
-    context_object_name = 'library'
+    context_object_name = 'library'# 
