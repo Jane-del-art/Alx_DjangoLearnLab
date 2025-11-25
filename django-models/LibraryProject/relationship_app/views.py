@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect 
+from django.shortcuts import render, redirect, get_object_or_404  # ← ADD get_object_or_404
 from django.views.generic import DetailView
 from django.contrib.auth import login  
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.decorators import user_passes_test
-from .models import Book, Library, UserProfile  
+from django.contrib.auth.decorators import user_passes_test, permission_required  # ← ADD permission_required
+from .models import Book, Library, UserProfile, Author  # ← ADD Author import
 
 def list_books(request):
     books = Book.objects.all()
@@ -19,6 +19,10 @@ def register_view(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+            # Ensure UserProfile is created
+            user_profile, created = UserProfile.objects.get_or_create(user=user)
+            user_profile.role = 'Member'  # Set default role
+            user_profile.save()
             login(request, user)
             return redirect('list_books')
     else:
