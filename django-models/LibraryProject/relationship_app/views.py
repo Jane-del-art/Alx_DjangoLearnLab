@@ -1,12 +1,9 @@
-from django.shortcuts import render
-from django.views.generic.detail import DetailView
-from .models import Library
-from .models import Book
-from django.contrib.auth import login, logout
+from django.shortcuts import render, redirect  # ← ADD redirect
+from django.views.generic import DetailView
+from django.contrib.auth import login  # ← REMOVE logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import user_passes_test
-from .models import UserProfile
-from .views import list_books
+from .models import Book, Library, UserProfile  # ← CLEANER IMPORT
 
 def list_books(request):
     books = Book.objects.all()
@@ -16,21 +13,6 @@ class LibraryDetailView(DetailView):
     model = Library
     template_name = 'relationship_app/library_detail.html'
     context_object_name = 'library'
-    
-   def register_view(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('list_books')
-    else:
-        form = UserCreationForm()
-    return render(request, 'relationship_app/register.html', {'form': form})
-       
-def logout_view(request):
-    logout(request)
-    return render(request, 'relationship_app/logout.html')
 
 def register_view(request):
     if request.method == 'POST':
