@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect  # ← ADD redirect
+from django.shortcuts import render, redirect 
 from django.views.generic import DetailView
-from django.contrib.auth import login  # ← REMOVE logout
+from django.contrib.auth import login  
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import user_passes_test
-from .models import Book, Library, UserProfile  # ← CLEANER IMPORT
+from .models import Book, Library, UserProfile  
 
 def list_books(request):
     books = Book.objects.all()
