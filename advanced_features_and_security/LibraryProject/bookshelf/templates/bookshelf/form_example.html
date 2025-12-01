@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Example - Security Demonstration</title>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Secure Form Example</h1>
+            <div class="csrf-info">
+                <strong>CSRF Protection Active:</strong> This form includes a CSRF token to prevent Cross-Site Request Forgery attacks.
+                The token is automatically validated by Django's middleware.
+            </div>
+        </header>
+        
+        <div class="security-alert">
+            <strong>Security Notice:</strong> This form demonstrates security best practices including CSRF protection, 
+            input validation, XSS prevention, and SQL injection protection.
+        </div>
+        
+        <main>
+            <form method="post" action="{% url 'bookshelf:example_form' %}" id="secureForm">
+                {% csrf_token %}  <!-- CSRF Token - Critical for security -->
+                
+                <div class="form-group">
+                    <label for="id_name">Full Name *</label>
+                    <input type="text" 
+                           name="name" 
+                           id="id_name" 
+                           class="form-control" 
+                           maxlength="100"
+                           placeholder="Enter your full name"
+                           required
+                           value="{{ form.name.value|default_if_none:'' }}">
+                    {% if form.name.errors %}
+                        <div class="errorlist">
+                            {% for error in form.name.errors %}
+                                <div class="error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="help-text">Maximum 100 characters. Special characters will be sanitized for security.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_email">Email Address *</label>
+                    <input type="email" 
+                           name="email" 
+                           id="id_email" 
+                           class="form-control" 
+                           placeholder="email@example.com"
+                           required
+                           value="{{ form.email.value|default_if_none:'' }}">
+                    {% if form.email.errors %}
+                        <div class="errorlist">
+                            {% for error in form.email.errors %}
+                                <div class="error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="help-text">Must be a valid email format. Used for verification only.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_age">Age (Optional)</label>
+                    <input type="number" 
+                           name="age" 
+                           id="id_age" 
+                           class="form-control" 
+                           min="0" 
+                           max="150"
+                           placeholder="Enter your age"
+                           value="{{ form.age.value|default_if_none:'' }}">
+                    {% if form.age.errors %}
+                        <div class="errorlist">
+                            {% for error in form.age.errors %}
+                                <div class="error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="help-text">Must be between 0 and 150. Server-side validation will reject invalid values.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_message">Message *</label>
+                    <textarea name="message" 
+                              id="id_message" 
+                              class="form-control" 
+                              rows="5"
+                              maxlength="1000"
+                              placeholder="Enter your message here..."
+                              required>{{ form.message.value|default_if_none:'' }}</textarea>
+                    {% if form.message.errors %}
+                        <div class="errorlist">
+                            {% for error in form.message.errors %}
+                                <div class="error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="help-text">Maximum 1000 characters. HTML tags and scripts will be removed for security.</div>
+                    
+                    <!-- XSS Warning -->
+                    <div class="xss-warning">
+                        <strong>Security Note:</strong> Attempting to inject scripts like 
+                        <code>&lt;script&gt;alert('xss')&lt;/script&gt;</code> will be automatically sanitized.
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" 
+                               name="agree_to_terms" 
+                               id="id_agree_to_terms"
+                               required>
+                        <label for="id_agree_to_terms" style="margin-bottom: 0;">
+                            I agree to the terms and conditions *
+                        </label>
+                    </div>
+                    {% if form.agree_to_terms.errors %}
+                        <div class="errorlist">
+                            {% for error in form.agree_to_terms.errors %}
+                                <div class="error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="help-text">Required for submission. This prevents automated form submissions.</div>
+                </div>
+                
+                {% if form.non_field_errors %}
+                    <div class="form-group">
+                        <div class="errorlist">
+                            {% for error in form.non_field_errors %}
+                                <div class="error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <button type="submit" class="btn">Submit Securely</button>
+            </form>
+            
+            <div class="security-features">
+                <h2>Security Features Implemented</h2>
+                <ul>
+                    <li><span class="feature-badge">CSRF</span> <strong>CSRF Protection:</strong> Form includes and validates CSRF tokens</li>
+                    <li><span class="feature-badge">XSS</span> <strong>XSS Prevention:</strong> Input sanitization removes dangerous HTML/JavaScript</li>
+                    <li><span class="feature-badge">SQL</span> <strong>SQL Injection Protection:</strong> Django ORM automatically parameterizes queries</li>
+                    <li><span class="feature-badge">VALID</span> <strong>Input Validation:</strong> All fields validated for format, length, and content</li>
+                    <li><span class="feature-badge">ESCAPE</span> <strong>Output Escaping:</strong> Django templates auto-escape HTML by default</li>
+                    <li><span class="feature-badge">CSP</span> <strong>Content Security Policy:</strong> Restricts sources for scripts and styles</li>
+                    <li><span class="feature-badge">HTTPS</span> <strong>Secure Cookies:</strong> Cookies marked as secure for HTTPS-only transmission</li>
+                </ul>
+            </div>
+        </main>
+        
+        <footer style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+            <p><strong>Security Demonstration Form</strong> | Django Security Best Practices</p>
+            <p><small>This form is protected by multiple security layers to prevent common web vulnerabilities.</small></p>
+        </footer>
+    </div>
+</body>
+</html>
