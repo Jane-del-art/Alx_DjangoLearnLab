@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-y-z_$v5jm)ht9d$qxj)q1ablbx!vk*4-3*4temsfd$%rf7joj4'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -40,10 +41,12 @@ INSTALLED_APPS = [
     'bookshelf',
     'relationship_app',
      'accounts',
+      'csp', 
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'csp.middleware.CSPMiddleware',  # Add CSP middleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -118,6 +121,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -132,7 +136,52 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 AUTH_USER_MODEL = 'bookshelf.CustomUser'
 
 
-
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+
+# Security middleware settings
+SECURE_BROWSER_XSS_FILTER = True  # Enable XSS filtering in browsers
+X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking by denying frames
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME type sniffing
+
+# Cookie security (set to True in production with HTTPS)
+CSRF_COOKIE_SECURE = True  # Send CSRF cookie only over HTTPS
+SESSION_COOKIE_SECURE = True  # Send session cookie only over HTTPS
+CSRF_COOKIE_HTTPONLY = True  # Prevent JavaScript access to CSRF cookie
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
+
+# HSTS settings (uncomment in production)
+# SECURE_HSTS_SECONDS = 31536000  # 1 year
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
+
+# SSL/HTTPS settings (uncomment in production)
+# SECURE_SSL_REDIRECT = True  # Redirect all HTTP to HTTPS
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Referrer policy
+SECURE_REFERRER_POLICY = 'same-origin'
+
+# ========================
+# CONTENT SECURITY POLICY (CSP)
+# ========================
+
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'",)  # 'unsafe-inline' for development
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'",)  # For development
+CSP_IMG_SRC = ("'self'", "data:",)
+CSP_FONT_SRC = ("'self'",)
+CSP_CONNECT_SRC = ("'self'",)
+CSP_OBJECT_SRC = ("'none'",)
+CSP_BASE_URI = ("'self'",)
+CSP_FORM_ACTION = ("'self'",)
+CSP_FRAME_ANCESTORS = ("'none'",)  # Same as X_FRAME_OPTIONS
+CSP_BLOCK_ALL_MIXED_CONTENT = True
+
+# For development, you might need to relax CSP
+if DEBUG:
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'",)
+    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'",)
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
