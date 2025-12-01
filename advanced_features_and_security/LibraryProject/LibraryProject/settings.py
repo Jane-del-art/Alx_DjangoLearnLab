@@ -128,6 +128,76 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ============================================
+# HTTPS AND SECURITY CONFIGURATION
+# ============================================
+
+# HTTPS Redirect Settings
+# ======================
+# SECURE_SSL_REDIRECT: Redirect all HTTP requests to HTTPS
+# IMPORTANT: Set to True in production when you have SSL/TLS certificate
+SECURE_SSL_REDIRECT = True
+
+# For development/testing without HTTPS, you can temporarily set this to False
+# SECURE_SSL_REDIRECT = False  # Use only during development
+
+# HSTS (HTTP Strict Transport Security) Settings
+# =============================================
+# SECURE_HSTS_SECONDS: Time in seconds for HSTS policy (31536000 = 1 year)
+# HSTS tells browsers to only access the site via HTTPS for the specified time
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+
+# SECURE_HSTS_INCLUDE_SUBDOMAINS: Apply HSTS to all subdomains
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+# SECURE_HSTS_PRELOAD: Allow inclusion in browser preload lists
+SECURE_HSTS_PRELOAD = True
+
+# Cookie Security Settings
+# ========================
+# SESSION_COOKIE_SECURE: Send session cookies only over HTTPS
+SESSION_COOKIE_SECURE = True
+
+# CSRF_COOKIE_SECURE: Send CSRF cookies only over HTTPS
+CSRF_COOKIE_SECURE = True
+
+# Additional Cookie Security
+# ==========================
+# SESSION_COOKIE_HTTPONLY: Prevent JavaScript access to session cookies
+SESSION_COOKIE_HTTPONLY = True
+
+# CSRF_COOKIE_HTTPONLY: Prevent JavaScript access to CSRF cookies
+# Note: Some JavaScript frameworks need access to CSRF tokens
+CSRF_COOKIE_HTTPONLY = True
+
+# SESSION_COOKIE_SAMESITE: Control when cookies are sent with cross-site requests
+# Options: 'Strict', 'Lax', or 'None'
+SESSION_COOKIE_SAMESITE = 'Lax'  # Recommended for most sites
+
+# CSRF_COOKIE_SAMESITE: SameSite policy for CSRF cookies
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Security Headers Configuration
+# ==============================
+# X_FRAME_OPTIONS: Prevent clickjacking by denying framing
+X_FRAME_OPTIONS = 'DENY'
+
+# SECURE_CONTENT_TYPE_NOSNIFF: Prevent MIME type sniffing
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# SECURE_BROWSER_XSS_FILTER: Enable browser XSS filtering
+SECURE_BROWSER_XSS_FILTER = True
+
+# Referrer Policy
+SECURE_REFERRER_POLICY = 'same-origin'
+
+# Proxy Settings (when behind a proxy/load balancer)
+# ==================================================
+# If your Django app is behind a proxy/load balancer that terminates SSL,
+# you need to configure these settings:
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 
 # Add to the bottom of settings.py
 LOGIN_REDIRECT_URL = '/relationship_app/books/'
@@ -179,9 +249,46 @@ CSP_FORM_ACTION = ("'self'",)
 CSP_FRAME_ANCESTORS = ("'none'",)  # Same as X_FRAME_OPTIONS
 CSP_BLOCK_ALL_MIXED_CONTENT = True
 
-# For development, you might need to relax CSP
-if DEBUG:
-    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'",)
-    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'",)
-    CSRF_COOKIE_SECURE = False
+# ============================================
+# DEVELOPMENT OVERRIDES
+# ============================================
+# Override security settings for development environment
+import sys
+
+# Check if we're in development mode (running tests or runserver)
+if 'test' in sys.argv or 'runserver' in sys.argv:
+    DEBUG = True
+    SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_HSTS_SECONDS = 0  # Disable HSTS for development
+    # Relax CSP for development
+    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'")
+    
+
+    # Development-specific allowed hosts
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+    
+    print("\n" + "="*60)
+    print("DEVELOPMENT MODE: Security settings relaxed for testing")
+    print("="*60 + "\n")
+
+# ============================================
+# ENVIRONMENT VARIABLE CONFIGURATION
+# ============================================
+# In production, use environment variables for sensitive settings
+import os
+from django.core.exceptions import ImproperlyConfigured
+
+def get_env_variable(var_name, default=None):
+    """Get environment variable or return default/exception."""
+    try:
+        return os.environ[var_name]
+    except KeyError:
+        if default is not None:
+            return default
+        error_msg = f"Set the {var_name} environment variable"
+        raise ImproperlyConfigured(error_msg)
+
+# Example: Use environment variable for secret key in production
+# SECRET_KEY = get_env_variable('DJANGO_SECRET_KEY')
