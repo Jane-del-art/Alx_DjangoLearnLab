@@ -20,9 +20,14 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     username = None
-    email = models.EmailField(unique=True)
-    date_of_birth = models.DateField(null=True, blank=True)
-    profile_photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
+    email = models.EmailField(_('email address'), unique=True)
+    date_of_birth = models.DateField(_('date of birth'), null=True, blank=True)
+    profile_photo = models.ImageField(
+        _('profile photo'), 
+        upload_to='profile_photos/',
+        null=True, 
+        blank=True
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -35,3 +40,20 @@ class CustomUser(AbstractUser):
     class Meta:
         verbose_name = _('user')
         verbose_name_plural = _('users')
+
+class Book(models.Model):
+    title = models.CharField(max_length=200)
+    author = models.CharField(max_length=100)
+    publication_year = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.title} by {self.author} ({self.publication_year})"
+
+    class Meta:
+        # Add custom permissions
+        permissions = [
+            ("can_view_book", "Can view book"),
+            ("can_create_book", "Can create book"),
+            ("can_edit_book", "Can edit book"),
+            ("can_delete_book", "Can delete book"),
+        ]
