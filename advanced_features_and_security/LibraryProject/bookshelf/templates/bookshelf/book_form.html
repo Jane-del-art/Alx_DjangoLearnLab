@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% if form.instance.pk %}Edit Book{% else %}Create Book{% endif %}</title>
+</head>
+<body>
+    <h1>{% if form.instance.pk %}Edit Book{% else %}Create Book{% endif %}</h1>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}  <!-- CSRF Token for security -->
+        
+        {{ form.as_p }}
+        
+        <button type="submit">Save</button>
+        <a href="{% url 'bookshelf:book_list' %}">Cancel</a>
+    </form>
+</body>
+</html>
