@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',  # Django REST Framework
-    'api',  
+    'rest_framework.authtoken',
+    'api',  # Your API app
 ]
 
 MIDDLEWARE = [
@@ -128,9 +129,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',  # Allow any user to access API
+         'rest_framework.permissions.IsAuthenticated',  # Default: Require authentication
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
+         'rest_framework.authentication.TokenAuthentication',  # Token authentication
     ],
 }
