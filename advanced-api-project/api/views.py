@@ -1,12 +1,26 @@
-from django.shortcuts import models
+"""
+Views for the advanced-api-project API.
 
-from rest_framework import generics, permissions, filters
+This module contains various types of views demonstrating Django REST Framework's capabilities:
+1. Generic Views for CRUD operations
+2. Custom APIViews for specialized operations
+3. ViewSets for consolidated operations
+"""
+
+# Django REST Framework imports
+from rest_framework import generics, permissions, filters, status, viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
+import django.db.models as models
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer, BookDetailSerializer
 
+
 # ============================================
-# BOOK VIEWS
+# BOOK VIEWS (Generic Views)
 # ============================================
 
 class BookListView(generics.ListAPIView):
@@ -23,7 +37,7 @@ class BookListView(generics.ListAPIView):
     """
     queryset = Book.objects.all().select_related('author')
     serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]  # Anyone can view
+    permission_classes = [AllowAny]  # Use imported AllowAny
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
     # Filtering options
@@ -69,7 +83,7 @@ class BookDetailView(generics.RetrieveAPIView):
     """
     queryset = Book.objects.all().select_related('author')
     serializer_class = BookDetailSerializer  # Use detailed serializer with nested author
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]  # Use imported AllowAny
     lookup_field = 'pk'  # Default, can be changed to other fields
 
 
@@ -83,23 +97,16 @@ class BookCreateView(generics.CreateAPIView):
     - Restricted to authenticated users
     
     Endpoint: POST /api/books/create/
-    Permissions: IsAuthenticated
+    Permissions: IsAuthenticated (imported)
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Use imported IsAuthenticated
     
     def perform_create(self, serializer):
         """
         Override to add custom logic before saving.
-        Example: Add created_by user or log creation
         """
-        # You could add the user who created the book
-        # if self.request.user.is_authenticated:
-        #     serializer.save(created_by=self.request.user)
-        # else:
-        #     serializer.save()
-        
         serializer.save()
         print(f"Book created: {serializer.instance.title}")
 
@@ -113,27 +120,37 @@ class BookUpdateView(generics.UpdateAPIView):
     - Also handles partial updates (PATCH)
     - Restricted to authenticated users
     
-    Endpoint: PUT /api/books/<id>/update/
-    Endpoint: PATCH /api/books/<id>/update/
-    Permissions: IsAuthenticated
+    Endpoint: PUT /api/books/update/
+    Endpoint: PATCH /api/books/update/
+    Also supports: PUT/PATCH /api/books/update/<pk>/
+    Permissions: IsAuthenticated (imported)
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Use imported IsAuthenticated
     lookup_field = 'pk'
     
-    def perform_update(self, serializer):
+    def get_object(self):
         """
-        Override to add custom logic before updating.
+        Get book object. Supports both patterns.
         """
-        # Log update or add updated_by user
-        # if self.request.user.is_authenticated:
-        #     serializer.save(updated_by=self.request.user)
-        # else:
-        #     serializer.save()
+        # If pk is in URL kwargs, use it
+        if 'pk' in self.kwargs:
+            return super().get_object()
         
+        # Otherwise, try to get pk from request data
+        pk = self.request.data.get('id') or self.request.data.get('pk')
+        if pk:
+            return generics.get_object_or_404(Book, pk=pk)
+        
+        from rest_framework.exceptions import ValidationError
+        raise ValidationError(
+            {'detail': 'Book ID is required in URL or request data.'}
+        )
+    
+    def perform_update(self, serializer):
+        """Custom logic before updating."""
         serializer.save()
-        print(f"Book updated: {serializer.instance.title}")
 
 
 class BookDeleteView(generics.DestroyAPIView):
@@ -145,32 +162,47 @@ class BookDeleteView(generics.DestroyAPIView):
     - Returns 204 No Content on success
     - Restricted to admin users only
     
-    Endpoint: DELETE /api/books/<id>/delete/
-    Permissions: IsAdminUser
+    Endpoint: DELETE /api/books/delete/
+    Also supports: DELETE /api/books/delete/<pk>/
+    Permissions: IsAdminUser (imported)
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.IsAdminUser]  # Only admins can delete
+    permission_classes = [IsAdminUser]  # Use imported IsAdminUser
     lookup_field = 'pk'
     
+    def get_object(self):
+        """
+        Get book object. Supports both patterns.
+        """
+        # If pk is in URL kwargs, use it
+        if 'pk' in self.kwargs:
+            return super().get_object()
+        
+        # Otherwise, try to get pk from request data
+        pk = self.request.data.get('id') or self.request.data.get('pk')
+        if pk:
+            return generics.get_object_or_404(Book, pk=pk)
+        
+        from rest_framework.exceptions import ValidationError
+        raise ValidationError(
+            {'detail': 'Book ID is required in URL or request data.'}
+        )
+    
     def perform_destroy(self, instance):
-        """
-        Override to add custom logic before deletion.
-        Example: Log deletion or archive instead of delete
-        """
-        print(f"Book deleted: {instance.title}")
+        """Custom logic before deletion."""
         instance.delete()
 
 
 # ============================================
-# AUTHOR VIEWS (Bonus - Similar pattern)
+# AUTHOR VIEWS (Generic Views)
 # ============================================
 
 class AuthorListView(generics.ListAPIView):
     """List all authors."""
     queryset = Author.objects.all().prefetch_related('books')
     serializer_class = AuthorSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]  # Use imported AllowAny
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name']
     ordering_fields = ['name']
@@ -181,7 +213,7 @@ class AuthorDetailView(generics.RetrieveAPIView):
     """Retrieve a specific author by ID."""
     queryset = Author.objects.all().prefetch_related('books')
     serializer_class = AuthorSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]  # Use imported AllowAny
     lookup_field = 'pk'
 
 
@@ -189,14 +221,14 @@ class AuthorCreateView(generics.CreateAPIView):
     """Create a new author."""
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Use imported IsAuthenticated
 
 
 class AuthorUpdateView(generics.UpdateAPIView):
     """Update an existing author."""
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Use imported IsAuthenticated
     lookup_field = 'pk'
 
 
@@ -204,17 +236,13 @@ class AuthorDeleteView(generics.DestroyAPIView):
     """Delete an author."""
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminUser]  # Use imported IsAdminUser
     lookup_field = 'pk'
 
 
 # ============================================
 # CUSTOM VIEWS (Example of non-generic views)
 # ============================================
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 
 class BookStatsView(APIView):
     """
@@ -224,7 +252,7 @@ class BookStatsView(APIView):
     
     Endpoint: GET /api/books/stats/
     """
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]  # Use imported AllowAny
     
     def get(self, request, format=None):
         """
@@ -267,7 +295,7 @@ class BookBulkCreateView(APIView):
     
     Endpoint: POST /api/books/bulk-create/
     """
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminUser]  # Use imported IsAdminUser
     
     def post(self, request, format=None):
         """
@@ -309,10 +337,6 @@ class BookBulkCreateView(APIView):
 # VIEWSET (Alternative approach)
 # ============================================
 
-from rest_framework import viewsets
-from rest_framework.decorators import action
-from rest_framework.response import Response
-
 class BookViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Book model - alternative to separate generic views.
@@ -322,7 +346,7 @@ class BookViewSet(viewsets.ModelViewSet):
     """
     queryset = Book.objects.all().select_related('author')
     serializer_class = BookSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Use imported IsAuthenticatedOrReadOnly
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['author', 'publication_year']
     search_fields = ['title', 'author__name']
@@ -340,7 +364,7 @@ class BookViewSet(viewsets.ModelViewSet):
         Customize permissions per action.
         """
         if self.action == 'destroy':
-            return [permissions.IsAdminUser()]
+            return [IsAdminUser()]  # Use imported IsAdminUser
         return super().get_permissions()
     
     @action(detail=True, methods=['get'])
@@ -373,4 +397,3 @@ class BookViewSet(viewsets.ModelViewSet):
         recent_books = Book.objects.order_by('-publication_year')[:10]
         serializer = self.get_serializer(recent_books, many=True)
         return Response(serializer.data)
-
