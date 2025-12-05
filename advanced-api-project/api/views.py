@@ -1,3 +1,5 @@
+from django.shortcuts import models
+
 from rest_framework import generics, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Author, Book
@@ -371,3 +373,4 @@ class BookViewSet(viewsets.ModelViewSet):
         recent_books = Book.objects.order_by('-publication_year')[:10]
         serializer = self.get_serializer(recent_books, many=True)
         return Response(serializer.data)
+
