@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}  <!-- Add this line -->
+
+{% block title %}Home - Django Blog{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="jumbotron bg-primary text-white rounded p-5 mb-4">
+            <h1 class="display-4">Welcome to Django Blog</h1>
+            <p class="lead">Share your thoughts, ideas, and experiences with the world.</p>
+            <hr class="my-4 bg-white">
+            <p>A powerful blogging platform built with Django.</p>
+            <a class="btn btn-light btn-lg" href="#">Get Started</a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-pen-fancy fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Easy Writing</h5>
+                        <p class="card-text">Create beautiful blog posts with our intuitive editor.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Community</h5>
+                        <p class="card-text">Connect with other writers and readers.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Analytics</h5>
+                        <p class="card-text">Track your blog's performance and growth.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
