@@ -1,5 +1,9 @@
 // Main JavaScript file for Django Blog
 
+// static/js/main.js - Main JavaScript
+console.log('Main JavaScript loaded');
+document.addEventListener('DOMContentLoaded', function() {
+    
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-dismiss alerts after 5 seconds
     const alerts = document.querySelectorAll('.alert');
@@ -55,4 +59,5 @@ document.addEventListener('DOMContentLoaded', function() {
             card.style.transform = 'translateY(0)';
         }, index * 100);
     });
+
 });
