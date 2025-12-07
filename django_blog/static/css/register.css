@@ -1,0 +1,19 @@
+/* static/css/register.css - Register page specific styles */
+.register-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.register-container .card {
+    border-radius: 15px;
+    border: none;
+}
+
+.register-container .card-header {
+    border-radius: 15px 15px 0 0;
+}
+
