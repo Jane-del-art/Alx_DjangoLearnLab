@@ -1,0 +1,107 @@
+/* static/css/auth.css - Authentication specific styles */
+
+/* Authentication Container */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Authentication Card */
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.auth-card-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 25px;
+    text-align: center;
+}
+
+.auth-card-body {
+    padding: 30px;
+}
+
+/* Form Styles */
+.auth-form .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-form .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.auth-form .form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px 15px;
+    transition: all 0.3s;
+}
+
+.auth-form .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Button Styles */
+.auth-btn {
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.3s;
+}
+
+.auth-btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    color: white;
+}
+
+.auth-btn-primary:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+}
+
+/* Link Styles */
+.auth-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Alert Messages */
+.auth-alert {
+    border-radius: 8px;
+    border: none;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .auth-card {
+        max-width: 100%;
+    }
+    
+    .auth-card-body {
+        padding: 20px;
+    }
+}
