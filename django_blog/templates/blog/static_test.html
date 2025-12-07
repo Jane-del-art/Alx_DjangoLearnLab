@@ -1,0 +1,48 @@
+<!-- templates/blog/static_test.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Static Files Test{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Static Files Test</h1>
+    
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5>CSS Files</h5>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li>style.css: {% static 'css/style.css' %}</li>
+                <li>auth.css: {% static 'css/auth.css' %}</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5>JavaScript Files</h5>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li>main.js: {% static 'js/main.js' %}</li>
+                <li>auth.js: {% static 'js/auth.js' %}</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>Images</h5>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li>favicon.ico: {% static 'images/favicon.ico' %}</li>
+                <li>login-bg.jpg: {% static 'images/auth/login-bg.jpg' %}</li>
+                <li>register-bg.jpg: {% static 'images/auth/register-bg.jpg' %}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
