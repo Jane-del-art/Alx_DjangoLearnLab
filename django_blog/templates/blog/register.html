@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Django Blog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Create Account</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <p>Please correct the errors below:</p>
+                        <ul class="mb-0">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ field|title }}: {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="form-group mb-3">
+                        <label for="id_username" class="form-label">Username</label>
+                        <input type="text" name="username" id="id_username" 
+                               class="form-control" required
+                               placeholder="Choose a username">
+                        {% if form.username.help_text %}
+                        <small class="form-text text-muted">{{ form.username.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="id_email" class="form-label">Email</label>
+                        <input type="email" name="email" id="id_email" 
+                               class="form-control" required
+                               placeholder="Enter your email">
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="id_password1" class="form-label">Password</label>
+                        <input type="password" name="password1" id="id_password1" 
+                               class="form-control" required
+                               placeholder="Create a password">
+                        {% if form.password1.help_text %}
+                        <small class="form-text text-muted">{{ form.password1.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="id_password2" class="form-label">Confirm Password</label>
+                        <input type="password" name="password2" id="id_password2" 
+                               class="form-control" required
+                               placeholder="Confirm your password">
+                        {% if form.password2.help_text %}
+                        <small class="form-text text-muted">{{ form.password2.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <button class="btn btn-primary btn-block" type="submit">Sign Up</button>
+                    </div>
+                </form>
+                <div class="border-top pt-3 text-center">
+                    <small class="text-muted">
+                        Already have an account? <a href="{% url 'login' %}" class="ml-2">Sign In</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
