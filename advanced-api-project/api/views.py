@@ -2,12 +2,16 @@
 Views for the advanced-api-project API with filtering, searching, and ordering.
 """
 
+# Django REST Framework imports
 from rest_framework import generics, permissions, filters, status, viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django_filters.rest_framework import DjangoFilterBackend
+
+from django_filters import rest_framework
+
+# Django imports
 import django.db.models as models
 
 # Local imports
@@ -60,9 +64,9 @@ class BookListView(generics.ListAPIView):
     
     # Configure filter backends
     filter_backends = [
-        DjangoFilterBackend,      # For field-based filtering
-        CustomSearchFilter,       # For search functionality (custom)
-        CustomOrderingFilter,     # For ordering functionality (custom)
+        rest_framework.DjangoFilterBackend,      # For field-based filtering
+        filters.SearchFilter,                    # For search functionality
+        filters.OrderingFilter,                  # For ordering functionality
     ]
     
     # DjangoFilterBackend configuration
@@ -245,7 +249,7 @@ class AuthorListView(generics.ListAPIView):
     queryset = Author.objects.all().prefetch_related('books')
     serializer_class = AuthorSerializer
     permission_classes = [AllowAny]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = AuthorFilter
     search_fields = ['name']
     ordering_fields = ['name', 'book_count']
@@ -398,7 +402,7 @@ class BookViewSet(viewsets.ModelViewSet):
     
     # Filter configuration
     filter_backends = [
-        DjangoFilterBackend,
+        rest_framework.DjangoFilterBackend,
         filters.SearchFilter,
         filters.OrderingFilter,
     ]
