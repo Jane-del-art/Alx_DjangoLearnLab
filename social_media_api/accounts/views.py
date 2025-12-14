@@ -2,7 +2,6 @@ from rest_framework import status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
 from django.contrib.auth import login, logout
 from django.contrib.auth import get_user_model
 from .models import UserProfile
@@ -11,8 +10,7 @@ from .serializers import (
     UserLoginSerializer,
     UserSerializer,
     UserUpdateSerializer,
-    UserPasswordChangeSerializer,
-    FollowerSerializer
+    UserPasswordChangeSerializer
 )
 
 User = get_user_model()
@@ -126,10 +124,7 @@ class ChangePasswordView(APIView):
             user = serializer.save()
             
             # Delete old token and create new one for security
-            try:
-                Token.objects.filter(user=user).delete()
-            except Token.DoesNotExist:
-                pass
+            Token.objects.filter(user=user).delete()
             
             # Create new token
             new_token = Token.objects.create(user=user)
@@ -140,70 +135,3 @@ class ChangePasswordView(APIView):
             }, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class FollowUserView(APIView):
-    """View for following/unfollowing users."""
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def post(self, request, username):
-        try:
-            user_to_follow = User.objects.get(username=username)
-        except User.DoesNotExist:
-            return Response(
-                {'error': 'User not found.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        if user_to_follow == request.user:
-            return Response(
-                {'error': 'You cannot follow yourself.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        current_user = request.user
-        
-        # Check if already following
-        if current_user.following.filter(id=user_to_follow.id).exists():
-            # Unfollow
-            current_user.following.remove(user_to_follow)
-            message = f'Unfollowed {username}'
-            action = 'unfollowed'
-        else:
-            # Follow
-            current_user.following.add(user_to_follow)
-            message = f'Now following {username}'
-            action = 'followed'
-        
-        return Response({
-            'message': message,
-            'action': action,
-            'following_count': current_user.following.count(),
-            'followers_count': current_user.followers.count(),
-            'target_user_followers_count': user_to_follow.followers.count()
-        }, status=status.HTTP_200_OK)
-
-class FollowersListView(generics.ListAPIView):
-    """View to list user's followers."""
-    serializer_class = FollowerSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_queryset(self):
-        username = self.kwargs.get('username')
-        try:
-            user = User.objects.get(username=username)
-            return user.followers.all()
-        except User.DoesNotExist:
-            return User.objects.none()
-
-class FollowingListView(generics.ListAPIView):
-    """View to list who a user is following."""
-    serializer_class = FollowerSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_queryset(self):
-        username = self.kwargs.get('username')
-        try:
-            user = User.objects.get(username=username)
-            return user.following.all()
-        except User.DoesNotExist:
-            return User.objects.none()
