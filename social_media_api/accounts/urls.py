@@ -1,6 +1,5 @@
 from django.urls import path
 from . import views
-from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     # Authentication endpoints
@@ -10,8 +9,13 @@ urlpatterns = [
     
     # User profile endpoints
     path('profile/', views.UserProfileView.as_view(), name='profile'),
-    path('profile/update/', views.UserProfileView.as_view(), name='profile-update'),
     
-    # Public user endpoint
+    # Password management
+    path('change-password/', views.ChangePasswordView.as_view(), name='change-password'),
+    
+    # Public user endpoints
     path('users/<str:username>/', views.UserDetailView.as_view(), name='user-detail'),
+    path('users/<str:username>/follow/', views.FollowUserView.as_view(), name='follow-user'),
+    path('users/<str:username>/followers/', views.FollowersListView.as_view(), name='user-followers'),
+    path('users/<str:username>/following/', views.FollowingListView.as_view(), name='user-following'),
 ]
