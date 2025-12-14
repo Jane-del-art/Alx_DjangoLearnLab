@@ -4,14 +4,18 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from django.contrib.auth import login, logout
-from .models import User, UserProfile
+from django.contrib.auth import get_user_model
+from .models import UserProfile
 from .serializers import (
     UserRegistrationSerializer,
     UserLoginSerializer,
     UserSerializer,
     UserUpdateSerializer,
-    UserPasswordChangeSerializer
+    UserPasswordChangeSerializer,
+    FollowerSerializer
 )
+
+User = get_user_model()
 
 class UserRegistrationView(APIView):
     """View for user registration."""
@@ -25,8 +29,11 @@ class UserRegistrationView(APIView):
             # Create user profile
             UserProfile.objects.create(user=user)
             
-            # Create token for the new user
+            # Create authentication token
             token = Token.objects.create(user=user)
+            
+            # Log the user in
+            login(request, user)
             
             return Response({
                 'message': 'User registered successfully!',
@@ -36,19 +43,20 @@ class UserRegistrationView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class UserLoginView(ObtainAuthToken):
+class UserLoginView(APIView):
     """View for user login."""
     permission_classes = [permissions.AllowAny]
     
-    def post(self, request, *args, **kwargs):
-        # Use the custom serializer for login
+    def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
         
         if serializer.is_valid():
             user = serializer.validated_data['user']
+            
+            # Log the user in
             login(request, user)
             
-            # Get or create token
+            # Get or create authentication token
             token, created = Token.objects.get_or_create(user=user)
             
             return Response({
@@ -64,11 +72,10 @@ class UserLogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request):
-        # Get the token associated with the user
+        # Delete the user's token
         try:
-            token = Token.objects.get(user=request.user)
-            token.delete()
-        except Token.DoesNotExist:
+            request.user.auth_token.delete()
+        except (AttributeError, Token.DoesNotExist):
             pass
         
         # Logout the user
@@ -95,7 +102,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         
         return Response({
             'message': 'Profile updated successfully!',
-            'user': UserSerializer(instance, context={'request': request}).data
+            'user': UserSerializer(instance).data
         }, status=status.HTTP_200_OK)
 
 class UserDetailView(generics.RetrieveAPIView):
@@ -118,14 +125,13 @@ class ChangePasswordView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             
-            # Update token (optional - creates new token on password change)
-            # This invalidates old tokens for security
+            # Delete old token and create new one for security
             try:
-                old_token = Token.objects.get(user=user)
-                old_token.delete()
+                Token.objects.filter(user=user).delete()
             except Token.DoesNotExist:
                 pass
             
+            # Create new token
             new_token = Token.objects.create(user=user)
             
             return Response({
@@ -154,18 +160,50 @@ class FollowUserView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        current_user = request.user
+        
         # Check if already following
-        if request.user.following.filter(id=user_to_follow.id).exists():
+        if current_user.following.filter(id=user_to_follow.id).exists():
             # Unfollow
-            request.user.following.remove(user_to_follow)
+            current_user.following.remove(user_to_follow)
             message = f'Unfollowed {username}'
+            action = 'unfollowed'
         else:
             # Follow
-            request.user.following.add(user_to_follow)
-            message = f'Following {username}'
+            current_user.following.add(user_to_follow)
+            message = f'Now following {username}'
+            action = 'followed'
         
         return Response({
             'message': message,
-            'following': request.user.following_count,
-            'followers': request.user.followers_count
+            'action': action,
+            'following_count': current_user.following.count(),
+            'followers_count': current_user.followers.count(),
+            'target_user_followers_count': user_to_follow.followers.count()
         }, status=status.HTTP_200_OK)
+
+class FollowersListView(generics.ListAPIView):
+    """View to list user's followers."""
+    serializer_class = FollowerSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        try:
+            user = User.objects.get(username=username)
+            return user.followers.all()
+        except User.DoesNotExist:
+            return User.objects.none()
+
+class FollowingListView(generics.ListAPIView):
+    """View to list who a user is following."""
+    serializer_class = FollowerSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        try:
+            user = User.objects.get(username=username)
+            return user.following.all()
+        except User.DoesNotExist:
+            return User.objects.none()
