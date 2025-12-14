@@ -1,7 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from .models import User, UserProfile
+from django.contrib.auth import get_user_model
+from .models import UserProfile
+
+# Get the User model
+User = get_user_model()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """Serializer for user registration."""
@@ -52,20 +56,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         # Get password
         password = validated_data.pop('password')
         
-        # Create user instance
-        user = User.objects.create(**validated_data)
-        
-        # Set password (hashed)
-        user.set_password(password)
-        user.save()
+        # Create user using create_user method
+        user = User.objects.create_user(**validated_data, password=password)
         
         return user
 
 class UserLoginSerializer(serializers.Serializer):
     """Serializer for user login."""
-    username = serializers.CharField(required=True)
+    username = serializers.CharField()
     password = serializers.CharField(
-        required=True,
         write_only=True,
         style={'input_type': 'password'}
     )
@@ -82,18 +81,17 @@ class UserLoginSerializer(serializers.Serializer):
                     user_obj = User.objects.get(email=username)
                     username = user_obj.username
                 except User.DoesNotExist:
-                    username = None
-
+                    raise serializers.ValidationError("Unable to log in with provided credentials.")
+            
             # Authenticate user
             user = authenticate(username=username, password=password)
             
             if user:
                 if not user.is_active:
                     raise serializers.ValidationError("User account is disabled.")
+                data['user'] = user
             else:
                 raise serializers.ValidationError("Unable to log in with provided credentials.")
-            
-            data['user'] = user
         else:
             raise serializers.ValidationError("Must include 'username' and 'password'.")
         
@@ -104,7 +102,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['website', 'location', 'birth_date']
-        read_only_fields = ['id']
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for user details."""
@@ -119,10 +116,7 @@ class UserSerializer(serializers.ModelSerializer):
             'bio', 'profile_picture', 'followers_count', 'following_count',
             'profile', 'date_joined', 'is_active'
         ]
-        read_only_fields = ['id', 'date_joined', 'is_active', 'email']
-        extra_kwargs = {
-            'email': {'read_only': True}
-        }
+        read_only_fields = ['id', 'date_joined', 'is_active']
 
     def get_followers_count(self, obj):
         """Get number of followers."""
@@ -137,12 +131,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'bio', 'profile_picture']
-        extra_kwargs = {
-            'first_name': {'required': False},
-            'last_name': {'required': False},
-            'bio': {'required': False, 'allow_blank': True},
-            'profile_picture': {'required': False}
-        }
 
 class UserPasswordChangeSerializer(serializers.Serializer):
     """Serializer for changing user password."""
@@ -182,15 +170,3 @@ class UserPasswordChangeSerializer(serializers.Serializer):
         user.set_password(self.validated_data['new_password'])
         user.save()
         return user
-
-class FollowerSerializer(serializers.ModelSerializer):
-    """Serializer for followers/following."""
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'profile_picture']
-
-class UserMinimalSerializer(serializers.ModelSerializer):
-    """Minimal user serializer for list views."""
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'profile_picture']
