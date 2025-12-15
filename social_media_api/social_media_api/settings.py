@@ -162,3 +162,6 @@ SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
+# Production / Heroku port
+PORT = os.environ.get('PORT', 8000)
+
